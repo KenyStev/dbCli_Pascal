@@ -3,7 +3,7 @@ program dbCli_Pascal;
 {$APPTYPE CONSOLE}
 
 uses
-  Classes, Sysutils;
+  Classes, Sysutils, MATH;
 
 {$I 'dbManagerFunc.dpr'}
 
@@ -23,18 +23,18 @@ begin
         1: CreateDatabase;
         2: DropDatabase;
         -1: writeln('bye bye!');
-      else writeln('Not valid option.');
+      else writeln('Not valid option.')
       end;
     except
       on E:Exception do
-        writeln('Database could not be created because: ', E.Message)
+        writeln('Database could not be created because: ', E.Message);
       end;
   until option = -1;
 end;
 
 //Main
 begin
-  //sizeOfBlock := 4*1024;
+  sizeOfBlock := 4*1024;
   MainMenu;
   readln;
 end.

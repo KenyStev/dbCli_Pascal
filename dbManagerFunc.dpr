@@ -7,28 +7,35 @@ const
 
 var
   fsOut    : TFileStream;
-  sizeOfBlock : integer;
+  sizeOfBlock : Longword;
 
 function openFile(dbName:string) : TFileStream;
 begin
     Result := TFileStream.Create( dbName, fmOpenWrite or fmOpenRead);
 end;
 
-procedure saveSuperBlock(dbName : string; dbSize : integer);
+{$I 'DatabaseStruct.dpr'}
+
+procedure createSuperBlock(dbName : string; dbSize : integer);
 var
     dbNameLarge : string;
-    cantBlocks : integer;
 begin
     dbNameLarge := C_ROOT + dbName + C_EXT;
-    fsOut := openFile(dbNameLarge);
-    fsOut.Write(dbName, 20);
-    fsOut.Write(dbSize,sizeof(dbSize));
-
+    databaseName := dbName;
+    databaseSize := dbSize;
     cantBlocks := Floor(dbSize/sizeOfBlock);
-
-    fsOut.Write(cantBlocks,sizeof(cantBlocks));
-
-    fsOut.free;
+    reserverForITables := Floor(dbSize*0.15);
+    freeBlocks := cantBlocks - Ceil((C_TOTAL_SUPERBLOCK + reserverForITables + cantBlocks/8)/sizeOfBlock);
+    cantITables := Floor(reserverForITables/C_TOTAL_ITABLES);
+    freeITables := cantITables;
+    bitmapBlock := C_TOTAL_SUPERBLOCK;
+    bitmapITable := bitmapBlock + Ceil(cantBlocks/8);
+    saveSuperBlock;
+    printSuperBlock;
+    writeln('----------------------------');
+    readSuperBlock;
+    printSuperBlock;
+    // initBitmapBlocks;
 end;
 
 procedure CreateDatabase;
@@ -37,6 +44,7 @@ var
   dbNameLarge : string;
   dbSize : integer;
   dbSizeInBytes : integer;
+  cantBlocks : integer;
 begin
   dbSize := 10;
   write('Insert database name: ');
@@ -45,6 +53,8 @@ begin
   write('Insert database size: ');
   readln(dbSize);
   dbSizeInBytes := dbSize*1024*1024;
+  cantBlocks := Ceil(dbSizeInBytes/sizeOfBlock);
+  dbSizeInBytes := cantBlocks*sizeOfBlock;
 
   // Catch errors in case the file cannot be created
   try
@@ -58,7 +68,7 @@ begin
     fsOut.Free;
 
     writeln('Database has beed created succsessfuly');
-    saveSuperBlock(dbName,dbSizeInBytes);
+    createSuperBlock(dbName,dbSizeInBytes);
   // Handle errors
   except
     on E:Exception do

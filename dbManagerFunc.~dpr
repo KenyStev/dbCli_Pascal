@@ -1,3 +1,5 @@
+{$I 'DatabaseStruct.dpr'}
+
 const
   C_ROOT = 'databases\';
   C_EXT = '.dbCli';
@@ -7,26 +9,48 @@ const
 
 var
   fsOut    : TFileStream;
-  sizeOfBlock : integer;
+  sizeOfBlock : Longword;
 
 function openFile(dbName:string) : TFileStream;
 begin
     Result := TFileStream.Create( dbName, fmOpenWrite or fmOpenRead);
 end;
 
-procedure saveSuperBlock(dbName : string; dbSize : integer)
+procedure saveSuperBlock(dbName : string; dbSize : integer);
 var
     dbNameLarge : string;
-    cantBlocks : integer;
 begin
     dbNameLarge := C_ROOT + dbName + C_EXT;
+    cantBlocks := Floor(dbSize/sizeOfBlock);
+    reserverForITables := Floor(dbSize*0.15);
+    freeBlocks := cantBlocks - Ceil((C_TOTAL_SUPERBLOCK + reserverForITables + cantBlocks/8)/sizeOfBlock);
+    cantITables := Floor(reserverForITables/C_TOTAL_ITABLES);
+    freeITables := cantITables;
+    bitmapBlock := C_TOTAL_SUPERBLOCK
+    bitmapITable := bitmapBlock + Ceil(cantBlocks/8);
+
     fsOut := openFile(dbNameLarge);
     fsOut.Write(dbName, 20);
     fsOut.Write(dbSize,sizeof(dbSize));
-
-    cantBlocks := Floor(dbSize/sizeOfBlock);
-
     fsOut.Write(cantBlocks,sizeof(cantBlocks));
+
+    //prints
+    write('name: ');
+    writeln(dbName);
+    write('size: ');
+    writeln(dbSize);
+    write('cantBlocks: ');
+    writeln(cantBlocks);
+    write('freeBlocks: ');
+    writeln(freeBlocks);
+    write('cantITables: ');
+    writeln(cantITables);
+    write('freeITables: ');
+    writeln(freeITables);
+    write('bitmapBlock: ');
+    writeln(bitmapBlock);
+    write('bitmapITable: ');
+    writeln(bitmapITable);
 
     fsOut.free;
 end;
@@ -37,6 +61,7 @@ var
   dbNameLarge : string;
   dbSize : integer;
   dbSizeInBytes : integer;
+  cantBlocks : integer;
 begin
   dbSize := 10;
   write('Insert database name: ');
@@ -45,6 +70,8 @@ begin
   write('Insert database size: ');
   readln(dbSize);
   dbSizeInBytes := dbSize*1024*1024;
+  cantBlocks := Ceil(dbSizeInBytes/sizeOfBlock);
+  dbSizeInBytes := cantBlocks*sizeOfBlock;
 
   // Catch errors in case the file cannot be created
   try
