@@ -1,5 +1,3 @@
-{$I 'DatabaseStruct.dpr'}
-
 const
   C_ROOT = 'databases\';
   C_EXT = '.dbCli';
@@ -13,46 +11,30 @@ var
 
 function openFile(dbName:string) : TFileStream;
 begin
-    Result := TFileStream.Create( dbName, fmOpenWrite or fmOpenRead);
+    Result := TFileStream.Create( C_ROOT + dbName + C_EXT, fmOpenWrite or fmOpenRead);
 end;
 
-procedure saveSuperBlock(dbName : string; dbSize : integer);
-var
-    dbNameLarge : string;
+{$I 'DatabaseStruct.dpr'}
+{$I 'BitmapManipulation.dpr'}
+
+procedure createSuperBlock(dbName : string; dbSize : integer);
 begin
-    dbNameLarge := C_ROOT + dbName + C_EXT;
+    databaseName := dbName;
+    databaseSize := dbSize;
     cantBlocks := Floor(dbSize/sizeOfBlock);
     reserverForITables := Floor(dbSize*0.15);
     freeBlocks := cantBlocks - Ceil((C_TOTAL_SUPERBLOCK + reserverForITables + cantBlocks/8)/sizeOfBlock);
     cantITables := Floor(reserverForITables/C_TOTAL_ITABLES);
     freeITables := cantITables;
-    bitmapBlock := C_TOTAL_SUPERBLOCK
+    bitmapBlock := C_TOTAL_SUPERBLOCK;
     bitmapITable := bitmapBlock + Ceil(cantBlocks/8);
 
-    fsOut := openFile(dbNameLarge);
-    fsOut.Write(dbName, 20);
-    fsOut.Write(dbSize,sizeof(dbSize));
-    fsOut.Write(cantBlocks,sizeof(cantBlocks));
-
-    //prints
-    write('name: ');
-    writeln(dbName);
-    write('size: ');
-    writeln(dbSize);
-    write('cantBlocks: ');
-    writeln(cantBlocks);
-    write('freeBlocks: ');
-    writeln(freeBlocks);
-    write('cantITables: ');
-    writeln(cantITables);
-    write('freeITables: ');
-    writeln(freeITables);
-    write('bitmapBlock: ');
-    writeln(bitmapBlock);
-    write('bitmapITable: ');
-    writeln(bitmapITable);
-
-    fsOut.free;
+    saveSuperBlock;
+    printSuperBlock;
+    writeln('----------------------------');
+    readSuperBlock;
+    printSuperBlock;
+    initBitmapBlocks;
 end;
 
 procedure CreateDatabase;
@@ -80,12 +62,12 @@ begin
         raise Exception.Create('Name cannot be greather than 20 characters!');
     end;
     // Create the file stream instance, write to it and free it to prevent memory leaks
-    fsOut := TFileStream.Create( dbNameLarge, fmCreate);
+    fsOut := TFileStream.Create( dbNameLarge, fmCreate)
     fsOut.size := dbSizeInBytes;
     fsOut.Free;
 
     writeln('Database has beed created succsessfuly');
-    saveSuperBlock(dbName,dbSizeInBytes);
+    createSuperBlock(dbName,dbSizeInBytes);
   // Handle errors
   except
     on E:Exception do

@@ -21,7 +21,7 @@ var //Metadata ITables
 
 procedure saveSuperBlock;
 begin
-    fsOut := openFile( C_ROOT + databaseName + C_EXT);
+    fsOut := openFile(databaseName);
     fsOut.Write(databaseName, 20);
     fsOut.Write(databaseSize,sizeof(databaseSize));
     fsOut.Write(cantBlocks,sizeof(cantBlocks));
@@ -35,7 +35,7 @@ end;
 
 procedure readSuperBlock;
 begin
-    fsOut := openFile( C_ROOT + databaseName + C_EXT);
+    fsOut := openFile(databaseName);
     fsOut.Read(databaseName, 20);
     fsOut.Read(databaseSize,sizeof(databaseSize));
     fsOut.Read(cantBlocks,sizeof(cantBlocks));

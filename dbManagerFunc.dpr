@@ -11,16 +11,14 @@ var
 
 function openFile(dbName:string) : TFileStream;
 begin
-    Result := TFileStream.Create( dbName, fmOpenWrite or fmOpenRead);
+    Result := TFileStream.Create( C_ROOT + dbName + C_EXT, fmOpenWrite or fmOpenRead);
 end;
 
 {$I 'DatabaseStruct.dpr'}
+{$I 'BitmapManipulation.dpr'}
 
 procedure createSuperBlock(dbName : string; dbSize : integer);
-var
-    dbNameLarge : string;
 begin
-    dbNameLarge := C_ROOT + dbName + C_EXT;
     databaseName := dbName;
     databaseSize := dbSize;
     cantBlocks := Floor(dbSize/sizeOfBlock);
@@ -30,12 +28,13 @@ begin
     freeITables := cantITables;
     bitmapBlock := C_TOTAL_SUPERBLOCK;
     bitmapITable := bitmapBlock + Ceil(cantBlocks/8);
+
     saveSuperBlock;
     printSuperBlock;
     writeln('----------------------------');
     readSuperBlock;
     printSuperBlock;
-    // initBitmapBlocks;
+    initBitmapBlocks;
 end;
 
 procedure CreateDatabase;
