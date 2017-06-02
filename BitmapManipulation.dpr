@@ -36,25 +36,33 @@ begin
     bitmap[cluster] := bitmap[cluster] and not (1 shl offset);
 end;
 
-procedure initBitmapBlocks;
-var
-    i : longword;
+procedure readBitmapBlocks;
 begin
     fsOut := openFile(databaseName);
-
     bitmapLength := Ceil(cantBlocks/8);
     SetLength(bitmap,bitmapLength);
     fsOut.Seek(bitmapBlock,soBeginning);
     fsOut.Read(bitmap[0],bitmapLength);
+    fsOut.free;
+end;
 
+procedure saveBitmapBlocks;
+begin
+    fsOut := openFile(databaseName);
     fsOut.Seek(bitmapBlock,soBeginning);
+    fsOut.Write(bitmap[0],bitmapLength);
+    fsOut.free;
+end;
+
+procedure initBitmapBlocks;
+var
+    i : longword;
+begin
+    readBitmapBlocks;
     usedBlocks := cantBlocks - freeBlocks;
-    
     for i := 0 to usedBlocks do
     begin
         SetUsedBlock(i);
     end;
-
-    fsOut.Write(bitmap[0],bitmapLength);
-    fsOut.free;
+    saveBitmapBlocks;
 end;

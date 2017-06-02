@@ -62,11 +62,11 @@ begin
         raise Exception.Create('Name cannot be greather than 20 characters!');
     end;
     // Create the file stream instance, write to it and free it to prevent memory leaks
-    fsOut := TFileStream.Create( dbNameLarge, fmCreate)
+    fsOut := TFileStream.Create( dbNameLarge, fmCreate);
     fsOut.size := dbSizeInBytes;
     fsOut.Free;
 
-    writeln('Database has beed created succsessfuly');
+    writeln('Database has beed created succsessfuly')
     createSuperBlock(dbName,dbSizeInBytes);
   // Handle errors
   except
