@@ -12,8 +12,8 @@ var
 
 function openFile(dbName:string) : TFileStream;
 begin
-    Result := TFileStream.Create( C_ROOT + dbName + C_EXT, fmOpenReadWrite);
-end
+    Result := TFileStream.Create( C_ROOT + dbName + C_EXT, fmOpenReadWrite)
+end;
 
 {$I 'DatabaseStruct.dpr'}
 {$I 'BitmapManipulation.dpr'}

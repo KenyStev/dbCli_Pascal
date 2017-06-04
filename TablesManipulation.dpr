@@ -103,6 +103,7 @@ begin
             SetUsedBlock(startBlock);
             saveBitmapBlocks;
             cantTables := cantTables + 1;
+            freeItables := freeItables - 1;
             saveSuperBlock;
             writeln('Table: ',tableName,' has been created!');
         end

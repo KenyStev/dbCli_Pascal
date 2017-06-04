@@ -23,6 +23,7 @@ begin
     cluster := Floor(block/8);
     offset := Floor(block mod 8);
     bitmap[cluster] := bitmap[cluster] or (1 shl offset);
+    freeBlocks := freeBlocks - 1;
 end;
  
 //set a particular bit as 0
@@ -34,6 +35,7 @@ begin
     cluster := Floor(block/8);
     offset := Floor(block mod 8);
     bitmap[cluster] := bitmap[cluster] and not (1 shl offset);
+    freeBlocks := freeBlocks + 1;
 end;
 
 function GetNextFreeBlock : longword;
