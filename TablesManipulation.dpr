@@ -37,7 +37,6 @@ var
     nextRecord : longword;
     currentTableName : string;
     isFree : Byte;
-    // isStringEntry : UTF8String;
 begin
     nextTable := 0;
     Result := false;
@@ -51,12 +50,9 @@ begin
         writeln('isFree: ',isFree);
         if not isFree = 0 then
         begin
-            // isStringEntry := '';
-            // currentTableName := '';
             fsOut.Read(tableNameSize,sizeof(integer));
             SetLength(currentTableName,tableNameSize);
             fsOut.ReadBuffer(pointer(currentTableName)^,tableNameSize);
-            // currentTableName := string(isStringEntry);
             writeln('currentTableName: ',currentTableName);
             if ansicomparestr(nameTable,currentTableName) = 0 then
             begin
@@ -80,7 +76,6 @@ end;
 procedure saveTableEntry;
 var
     offset : longword;
-    // osStringEntry : UTF8String;
 begin
     writeln('saveEntry tableName: ',tableName);
     offset := bitmapITable + currentTable*C_TOTAL_ITABLES;
@@ -90,9 +85,6 @@ begin
     fsOut.Write(freeEntry,sizeof(Byte));
     fsOut.Write(tableNameSize,sizeof(integer));
     writeln('pos: ',fsOut.Position);
-    // SetLength(tableName,C_MAX_LENGTH);
-    writeln('saveEntry tableName: ',tableName);
-    // osStringEntry := UTF8String(tableName);
     writeln('saveEntry tableName: ',tableName);
     fsOut.WriteBuffer(pointer(tableName)^,tableNameSize);
     writeln('pos: ',fsOut.Position);
