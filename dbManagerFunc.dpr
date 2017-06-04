@@ -4,18 +4,24 @@ const
 
   C_CREATE_DB_OPTION_MSG = '1. Create Database.';
   C_DROP_DB_OPTION_MSG = '2. Drop Database.';
+  C_CONNECT_DB_OPTION_MSG = '2. Connect Database.';
 
 var
   fsOut    : TFileStream;
   sizeOfBlock : Longword;
 
 function openFile(dbName:string) : TFileStream;
+var
+    fs : TFileStream;
 begin
-    Result := TFileStream.Create( C_ROOT + dbName + C_EXT, fmOpenWrite or fmOpenRead);
+    fs := TFileStream.Create( C_ROOT + dbName + C_EXT, fmOpenWrite or fmOpenRead);
+    fs.Seek(0,soBeginning);
+    Result := fs;
 end;
 
 {$I 'DatabaseStruct.dpr'}
 {$I 'BitmapManipulation.dpr'}
+{$I 'TablesManipulation.dpr'}
 
 procedure createSuperBlock(dbName : string; dbSize : integer);
 begin
@@ -28,6 +34,7 @@ begin
     freeITables := cantITables;
     bitmapBlock := C_TOTAL_SUPERBLOCK;
     bitmapITable := bitmapBlock + Ceil(cantBlocks/8);
+    cantTables := 0;
 
     saveSuperBlock;
     printSuperBlock;
@@ -40,7 +47,7 @@ end;
 procedure CreateDatabase;
 var
   dbName : string;
-  dbNameLarge : string;
+  dbPath : string;
   dbSize : integer;
   dbSizeInBytes : integer;
   cantBlocks : integer;
@@ -48,7 +55,7 @@ begin
   dbSize := 10;
   write('Insert database name: ');
   readln(dbName);
-  dbNameLarge := C_ROOT + dbName + C_EXT;
+  dbPath := C_ROOT + dbName + C_EXT;
   write('Insert database size: ');
   readln(dbSize);
   dbSizeInBytes := dbSize*1024*1024;
@@ -62,7 +69,7 @@ begin
         raise Exception.Create('Name cannot be greather than 20 characters!');
     end;
     // Create the file stream instance, write to it and free it to prevent memory leaks
-    fsOut := TFileStream.Create( dbNameLarge, fmCreate);
+    fsOut := TFileStream.Create( dbPath, fmCreate);
     fsOut.size := dbSizeInBytes;
     fsOut.Free;
 
@@ -78,13 +85,51 @@ end;
 procedure DropDatabase;
 var
   dbName : string;
-  dbNameLarge : string;
+  dbPath : string;
 begin
   write('Insert database to delete: ');
   readln(dbName);
-  dbNameLarge := C_ROOT + dbName + C_EXT;
+  dbPath := C_ROOT + dbName + C_EXT;
   // Now delete the file
-  if deletefile(dbNameLarge)
+  if deletefile(dbPath)
   then writeln(dbName+' deleted OK')
   else writeln(dbName+' not deleted');
+end;
+
+procedure ConnectDatabase(dbName : string);
+var
+    option : integer;
+begin
+    databaseName := dbName;
+    readSuperBlock;
+    writeln('Using database: ',dbName);
+    repeat
+        writeln(C_CREATE_TABLE_MSG);
+        writeln(C_DROP_TABLE_MSG);
+        writeln(C_PRINT_SUPERBLOCK_MSG);
+        writeln('-1. Disconnect.');
+        write('select option: ');
+        readln(option);
+
+        case option of
+        1: CreateTable;
+        2: DropTable;
+        7: printSuperBlock;
+        -1: writeln('disconnecting: ',dbName,'!');
+        else writeln('Not valid option.');
+        end;
+    until (option = -1);
+end;
+
+procedure UseDatabase;
+var
+    dbName : string;
+    dbPath : string;
+begin
+    write('Insert database to use: ');
+    readln(dbName);
+    dbPath := C_ROOT + dbName + C_EXT;
+    if fileexists(dbPath) 
+    then ConnectDatabase(dbName)
+    else writeln('Database not found!');
 end;

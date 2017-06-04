@@ -36,6 +36,21 @@ begin
     bitmap[cluster] := bitmap[cluster] and not (1 shl offset);
 end;
 
+function GetNextFreeBlock : longword;
+var
+    i : longword;
+begin
+    Result := 0;
+    for i := 0 to cantBlocks do
+    begin
+        if not GetBlock(i) then
+        begin
+            Result := i;
+            exit;
+        end;
+    end;
+end;
+
 procedure readBitmapBlocks;
 begin
     fsOut := openFile(databaseName);

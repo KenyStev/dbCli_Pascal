@@ -11,7 +11,7 @@ var
 begin
     cluster := Floor(block/8);
     offset := Floor(block mod 8);
-    Result := (bitmap[cluster] and (1 shl offset)) <> 0;
+    Result := (bitmap[cluster] and (1 shl offset)) <> 0
 end;
  
 //set a particular bit as 1
@@ -36,29 +36,48 @@ begin
     bitmap[cluster] := bitmap[cluster] and not (1 shl offset);
 end;
 
+function GetNextFreeBlock : longword;
+var
+    i : longword;
+begin
+    Result := 0;
+    for i := 0 to cantBlocks do
+    begin
+        if not GetBlock(i) then
+        begin
+            Result := i;
+            exit;
+        end;
+    end;
+end;
+
+procedure readBitmapBlocks;
+begin
+    fsOut := openFile(databaseName);
+    bitmapLength := Ceil(cantBlocks/8);
+    SetLength(bitmap,bitmapLength);
+    fsOut.Seek(bitmapBlock,soBeginning);
+    fsOut.Read(bitmap[0],bitmapLength);
+    fsOut.free;
+end;
+
+procedure saveBitmapBlocks;
+begin
+    fsOut := openFile(databaseName);
+    fsOut.Seek(bitmapBlock,soBeginning);
+    fsOut.Write(bitmap[0],bitmapLength);
+    fsOut.free;
+end;
+
 procedure initBitmapBlocks;
 var
     i : longword;
 begin
-    fsOut := openFile(databaseName);
-
-    bitmapLength := Ceil(cantBlocks/8);
-    SetLength(bitmap,bitmapLength);
-    fsOut.Seek(bitmapBlock,soBeginning)
-    fsOut.ReadBuffer(Pointer(bitmap)^,bitmapLength*sizeof(Byte));
-    fsOut.free;
-    fsOut.Seek(bitmapBlock,soBeginning);
+    readBitmapBlocks;
     usedBlocks := cantBlocks - freeBlocks;
-    
     for i := 0 to usedBlocks do
     begin
-        write('oldValue: ');
-        writeln(GetBlock(i));
         SetUsedBlock(i);
-        write('newValue: ');
-        writeln(GetBlock(i));
     end;
-
-    fsOut.WriteBuffer(Pointer(bitmap)^,bitmapLength*sizeof(Byte));
-    fsOut.free;
+    saveBitmapBlocks;
 end;

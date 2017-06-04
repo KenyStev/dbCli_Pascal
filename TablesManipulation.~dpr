@@ -1,0 +1,119 @@
+const
+  C_CREATE_TABLE_MSG = '1. Create Table.';
+  C_DROP_TABLE_MSG = '2. Drop Table.';
+
+function GetNextFreeITable : integer;
+var
+    nextFreeITable : integer;
+    isFree : Byte;
+    nextRecord : longword;
+begin
+    Result := -1;
+    nextFreeITable := 0;
+    isFree := 0;
+    fsOut := openFile(databaseName);
+    fsOut.Seek(bitmapITable,soBeginning);
+    repeat
+        fsOut.Read(isFree,sizeof(isFree));
+        writeln('isFree; ',isFree);
+        if isFree = 0 then
+        begin
+            Result := nextFreeITable;
+            fsOut.free;
+            exit;
+        end;
+        nextFreeITable := nextFreeITable + 1;
+        nextRecord := bitmapITable + nextFreeITable*C_TOTAL_ITABLES;
+        fsOut.Seek(nextRecord,soBeginning);
+    until (nextFreeITable = cantITables);
+    fsOut.free;
+end;
+
+function existTable(nameTable:string) : Boolean;
+var
+    nextTable : longword;
+    nextRecord : longword;
+    currentTableName : string;
+    isFree : Byte;
+begin
+    nextTable := 0;
+    Result := false;
+    fsOut := openFile(databaseName);
+    fsOut.Seek(bitmapITable,soBeginning);
+    while nextTable < cantTables do
+    begin
+        fsOut.Read(isFree,sizeof(isFree));
+        if not isFree = 0 then
+        begin
+            fsOut.Read(currentTableName,20)
+            if ansicomparestr(nameTable,currentTableName) = 0 then
+            begin
+                Result := true;
+                exit;
+            end;
+        end;
+
+        nextTable := nextTable + 1;
+        nextRecord := bitmapITable + nextTable*C_TOTAL_ITABLES;
+        fsOut.Seek(nextRecord,soBeginning);
+    end;
+    
+    fsOut.free;
+end;
+
+procedure saveTableEntry;
+var
+    offset : longword;
+begin
+    offset := bitmapITable + currentTable*C_TOTAL_ITABLES;
+    fsOut := openFile(databaseName);
+    fsOut.Seek(offset,soBeginning);
+    fsOut.Write(freeEntry,sizeof(freeEntry));
+    fsOut.Write(tableName,sizeof(tableName));
+    fsOut.Write(firstBlock,sizeof(firstBlock));
+    fsOut.Write(lastBlock,sizeof(lastBlock));
+    fsOut.Write(cantRegisters,sizeof(cantRegisters));
+    fsOut.free;
+end;
+
+procedure CreateTable;
+var
+    tableName : string;
+    indexTable : integer;
+    startBlock : integer;
+begin
+    indexTable := GetNextFreeITable;
+    startBlock := GetNextFreeBlock;
+    writeln('indexTable: ',indexTable);
+    writeln('startBlock: ',startBlock);
+    if (indexTable >= 0) And (startBlock > 0) then
+    begin
+        write('Insert Table Name: ');
+        readln(tableName);
+        if not existTable(tableName) then 
+        begin
+            freeEntry := 1;
+            tableName := tableName;
+            firstBlock := startBlock;
+            lastBlock := startBlock;
+            cantRegisters := 0;
+            currentTable := indexTable;
+            saveTableEntry;
+            SetUsedBlock(startBlock);
+            saveBitmapBlocks;
+            cantTables := cantTables + 1;
+            saveSuperBlock;
+            writeln('Table: ',tableName,' has been created!');
+        end
+        else writeln('Table already exist!');
+    end
+    else
+    begin
+        writeln('Cannot create more tables');
+    end;
+end;
+
+procedure DropTable;
+begin
+    
+end;

@@ -1,9 +1,8 @@
 program dbCli_Pascal;
 
 {$APPTYPE CONSOLE}
-
 uses
-  Classes, Sysutils, MATH;
+  Classes, Sysutils, MATH, SharedGlobals;
 
 {$I 'dbManagerFunc.dpr'}
 
@@ -15,6 +14,7 @@ begin
   repeat
     writeln(C_CREATE_DB_OPTION_MSG);
     writeln(C_DROP_DB_OPTION_MSG);
+    writeln(C_CONNECT_DB_OPTION_MSG);
     writeln('-1. Exit');
     write('select option: ');
     readln(option);
@@ -22,6 +22,7 @@ begin
       case option of
         1: CreateDatabase;
         2: DropDatabase;
+        3: UseDatabase;
         -1: writeln('bye bye!');
       else writeln('Not valid option.');
       end;

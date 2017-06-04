@@ -1,69 +1,53 @@
 const
-    C_TOTAL_SUPERBLOCK = 20+4*7;
-    C_TOTAL_ITABLES = 20+4*3;
-
-var //Metadata Database
-    databaseName : string;          //20 bytes
-    databaseSize : Longword;        // 4 bytes
-    cantBlocks : integer;           // 4 bytes
-    freeBlocks : integer;           // 4 bytes
-    cantITables : integer;          // 4 bytes
-    freeItables : integer;          // 4 bytes
-    bitmapBlock : integer;          // 4 bytes
-    bitmapITable : integer;         // 4 bytes
-    reserverForITables : Longword;  
-
-var //Metadata ITables
-    tableName : string;             //20 bytes
-    firstBlock : Longword;          // 4 bytes
-    lastBlock : Longword;           // 4 bytes
-    cantRegisters : Longword;       // 4 bytes
+    C_TOTAL_SUPERBLOCK = 20+4*8;
+    C_TOTAL_ITABLES = 21+4*3;
+        
+procedure printSuperBlock;
+begin
+    //prints
+    writeln('name: ',databaseName);
+    writeln('size: ',databaseSize);
+    writeln('cantBlocks: ',cantBlocks);
+    writeln('freeBlocks: ',freeBlocks);
+    writeln('cantITables: ',cantITables);
+    writeln('freeITables: ',freeITables);
+    writeln('bitmapBlock: ',bitmapBlock);
+    writeln('bitmapITable: ',bitmapITable);
+    writeln('cantTables: ',cantTables);
+end;
 
 procedure saveSuperBlock;
 begin
-    fsOut := openFile(databaseName)
+    fsOut := openFile(databaseName);
     fsOut.Write(databaseName, 20);
-    fsOut.Write(databaseSize,sizeof(databaseSize));
-    fsOut.Write(cantBlocks,sizeof(cantBlocks));
-    fsOut.Write(freeBlocks,sizeof(freeBlocks));
-    fsOut.Write(cantITables,sizeof(cantITables));
-    fsOut.Write(freeITables,sizeof(freeITables));
-    fsOut.Write(bitmapBlock,sizeof(bitmapBlock));
-    fsOut.Write(bitmapITable,sizeof(bitmapITable));
+    fsOut.Write(databaseSize,sizeof(longword));
+    fsOut.Write(cantBlocks,sizeof(integer));
+    fsOut.Write(freeBlocks,sizeof(integer));
+    fsOut.Write(cantITables,sizeof(integer));
+    fsOut.Write(freeITables,sizeof(integer));
+    fsOut.Write(bitmapBlock,sizeof(integer));
+    fsOut.Write(bitmapITable,sizeof(integer));
+    fsOut.Write(cantTables,sizeof(integer));
     fsOut.free;
 end;
 
 procedure readSuperBlock;
+var
+    dbSize : longword;
 begin
-    fsOut := openFile(databaseName);
+    fsOut := openFile(databaseName)
+    fsOut.Seek(0,soBeginning);
     fsOut.Read(databaseName, 20);
-    fsOut.Read(databaseSize,sizeof(databaseSize));
-    fsOut.Read(cantBlocks,sizeof(cantBlocks));
-    fsOut.Read(freeBlocks,sizeof(freeBlocks));
-    fsOut.Read(cantITables,sizeof(cantITables));
-    fsOut.Read(freeITables,sizeof(freeITables));
-    fsOut.Read(bitmapBlock,sizeof(bitmapBlock));
-    fsOut.Read(bitmapITable,sizeof(bitmapITable));
+    fsOut.Read(dbSize,sizeof(longword));
+    writeln('databaseSize:   -> ',dbSize);
+    databaseSize := dbSize;
+    fsOut.Read(cantBlocks,sizeof(integer));
+    fsOut.Read(freeBlocks,sizeof(integer));
+    fsOut.Read(cantITables,sizeof(integer));
+    fsOut.Read(freeITables,sizeof(integer));
+    fsOut.Read(bitmapBlock,sizeof(integer));
+    fsOut.Read(bitmapITable,sizeof(integer));
+    fsOut.Read(cantTables,sizeof(integer));
     fsOut.free;
-end;
-
-procedure printSuperBlock;
-begin
-    //prints
-    write('name: ');
-    writeln(databaseName);
-    write('size: ');
-    writeln(databaseSize);
-    write('cantBlocks: ');
-    writeln(cantBlocks);
-    write('freeBlocks: ');
-    writeln(freeBlocks);
-    write('cantITables: ');
-    writeln(cantITables);
-    write('freeITables: ');
-    writeln(freeITables);
-    write('bitmapBlock: ');
-    writeln(bitmapBlock);
-    write('bitmapITable: ');
-    writeln(bitmapITable);
+    printSuperBlock;
 end;
