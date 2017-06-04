@@ -4,6 +4,9 @@ program dbCli_Pascal;
 uses
   Classes, Sysutils, MATH, SharedGlobals;
 
+const
+  C_FNAME = 'binarydata.bin';
+
 {$I 'dbManagerFunc.dpr'}
 
 procedure MainMenu;

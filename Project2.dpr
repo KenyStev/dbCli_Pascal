@@ -155,3 +155,35 @@ begin
   //     writeln('File ', C_FNAME, ' could not be created because: ', E.Message);
   // end;
 end.
+
+
+//Reading and writing strings
+//Main
+var
+  tryfsOut : TFileStream;
+  valor : string;
+  osString : UTF8String;
+begin
+  // valor := 'Hola';
+  // SetLength(valor,20);
+  // osString := UTF8String(valor);
+  // tryfsOut := TFileStream.Create( C_FNAME, fmCreate);
+  // writeln('pos: ',tryfsOut.Position);
+  // writeln('Length(valor): ',Length(valor));
+  // tryfsOut.WriteBuffer(osString[1], Length(valor));
+  // writeln('pos: ',tryfsOut.Position);
+  // writeln('Length(valor): ',Length(valor));
+  // tryfsOut.Free;
+
+  SetLength(osString,20);
+  tryfsOut := TFileStream.Create( C_FNAME, fmOpenReadWrite);
+  writeln('pos: ',tryfsOut.Position);
+  tryfsOut.ReadBuffer(osString[1],Length(osString));
+  valor := string(osString);
+  writeln('valor: ',valor);
+  tryfsOut.free;
+
+  // sizeOfBlock := 4*1024;
+  // MainMenu;
+  readln;
+end.

@@ -17,10 +17,18 @@ begin
 end;
 
 procedure saveSuperBlock;
+var
+    dbName : string;
+    osString : UTF8String;
 begin
+    dbName := databaseName;
+    SetLength(dbName,C_MAX_LENGTH);
+    osString := UTF8String(dbName);
+    writeln('writeSB dbName: ',dbName);
+    writeln('writeSB: ',databaseName);
     fsOut := openFile(databaseName);
-    fsOut.Write(databaseName[1], Length(databaseName));
-    fsOut.Seek(20,soBeginning);
+    writeln('writeSB dbName: ',dbName);
+    fsOut.WriteBuffer(osString[1], Length(dbName));
     fsOut.Write(databaseSize,sizeof(longword));
     fsOut.Write(cantBlocks,sizeof(integer));
     fsOut.Write(freeBlocks,sizeof(integer));
@@ -33,9 +41,16 @@ begin
 end;
 
 procedure readSuperBlock;
+// var
+    // isString : UTF8String;
 begin
+    // SetLength(isString,C_MAX_LENGTH);
+    // writeln('readSB: ',databaseName);
     fsOut := openFile(databaseName);
-    // fsOut.Read(databaseName, sizeof(databaseName));
+    // writeln('readSB: ',databaseName);
+    // fsOut.ReadBuffer(isString[1], Length(isString));
+    // databaseName := string(isString);
+    // writeln('readSB databaseName: ',databaseName);
     fsOut.Seek(20,soBeginning);
     fsOut.Read(databaseSize,sizeof(longword));
     fsOut.Read(cantBlocks,sizeof(integer));

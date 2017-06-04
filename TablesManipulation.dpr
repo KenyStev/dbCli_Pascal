@@ -31,26 +31,36 @@ begin
     fsOut.free;
 end;
 
-function existTable(nameTable:string) : Boolean;
+function existTable(const nameTable : string) : Boolean;
 var
     nextTable : longword;
     nextRecord : longword;
     currentTableName : string;
     isFree : Byte;
+    isStringEntry : UTF8String;
 begin
     nextTable := 0;
     Result := false;
     fsOut := openFile(databaseName);
     fsOut.Seek(bitmapITable,soBeginning);
+    writeln('nextTable: ',nextTable);
+    writeln('cantTables: ',cantTables);
     while nextTable < cantTables do
     begin
         fsOut.Read(isFree,sizeof(Byte));
+        writeln('isFree: ',isFree);
         if not isFree = 0 then
         begin
-            fsOut.Read(currentTableName,20);
+            isStringEntry := '';
+            currentTableName := '';
+            SetLength(isStringEntry,C_MAX_LENGTH);
+            fsOut.ReadBuffer(isStringEntry[1],Length(isStringEntry));
+            currentTableName := string(isStringEntry);
+            writeln('currentTableName: ',currentTableName);
             if ansicomparestr(nameTable,currentTableName) = 0 then
             begin
                 Result := true;
+                fsOut.free;
                 exit;
             end;
         end;
@@ -58,6 +68,9 @@ begin
         nextTable := nextTable + 1;
         nextRecord := bitmapITable + nextTable*C_TOTAL_ITABLES;
         fsOut.Seek(nextRecord,soBeginning);
+
+        writeln('nextTable: ',nextTable);
+        writeln('cantTables: ',cantTables);
     end;
     
     fsOut.free;
@@ -66,15 +79,27 @@ end;
 procedure saveTableEntry;
 var
     offset : longword;
+    osStringEntry : UTF8String;
 begin
+    writeln('saveEntry tableName: ',tableName);
     offset := bitmapITable + currentTable*C_TOTAL_ITABLES;
     fsOut := openFile(databaseName);
     fsOut.Seek(offset,soBeginning);
+    writeln('pos: ',fsOut.Position);
     fsOut.Write(freeEntry,sizeof(Byte));
-    fsOut.Write(tableName,sizeof(20));
+    writeln('pos: ',fsOut.Position);
+    SetLength(tableName,C_MAX_LENGTH);
+    writeln('saveEntry tableName: ',tableName);
+    osStringEntry := UTF8String(tableName);
+    writeln('saveEntry tableName: ',tableName);
+    fsOut.WriteBuffer(osStringEntry[1],Length(tableName));
+    writeln('pos: ',fsOut.Position);
     fsOut.Write(firstBlock,sizeof(integer));
+    writeln('pos: ',fsOut.Position);
     fsOut.Write(lastBlock,sizeof(integer));
+    writeln('pos: ',fsOut.Position);
     fsOut.Write(cantRegisters,sizeof(integer));
+    writeln('pos: ',fsOut.Position);
     fsOut.free;
 end;
 
@@ -82,6 +107,7 @@ procedure CreateTable;
 var
     indexTable : integer;
     startBlock : integer;
+    newTableName : string;
 begin
     readBitmapBlocks;
     indexTable := GetNextFreeITable;
@@ -91,10 +117,11 @@ begin
     if (indexTable >= 0) And (startBlock > 0) then
     begin
         write('Insert Table Name: ');
-        readln(tableName);
-        if not existTable(tableName) then 
+        readln(newTableName);
+        if not existTable(newTableName) then 
         begin
-            freeEntry := 1;
+            tableName := newTableName;
+            freeEntry := $ff;
             firstBlock := startBlock;
             lastBlock := startBlock;
             cantRegisters := 0;
@@ -105,7 +132,7 @@ begin
             cantTables := cantTables + 1;
             freeItables := freeItables - 1;
             saveSuperBlock;
-            writeln('Table: ',tableName,' has been created!');
+            writeln('Table: ',newTableName,' has been created!');
         end
         else writeln('Table already exist!');
     end

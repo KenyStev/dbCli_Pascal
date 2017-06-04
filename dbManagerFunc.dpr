@@ -6,12 +6,15 @@ const
   C_DROP_DB_OPTION_MSG = '2. Drop Database.';
   C_CONNECT_DB_OPTION_MSG = '2. Connect Database.';
 
+  C_MAX_LENGTH = 20;
+
 var
   fsOut    : TFileStream;
   sizeOfBlock : Longword;
 
-function openFile(dbName:string) : TFileStream;
+function openFile(const dbName:string) : TFileStream;
 begin
+    writeln('openFile: ',dbName);
     Result := TFileStream.Create( C_ROOT + dbName + C_EXT, fmOpenReadWrite);
 end;
 
@@ -19,7 +22,7 @@ end;
 {$I 'BitmapManipulation.dpr'}
 {$I 'TablesManipulation.dpr'}
 
-procedure createSuperBlock(dbName : string; dbSize : integer);
+procedure createSuperBlock(const dbName : string; dbSize : integer);
 begin
     databaseName := dbName;
     databaseSize := dbSize;
@@ -58,9 +61,12 @@ begin
   cantBlocks := Ceil(dbSizeInBytes/sizeOfBlock);
   dbSizeInBytes := cantBlocks*sizeOfBlock;
 
+  writeln('CreateDB: ',dbName);
+  writeln('CreateDBPath: ',dbPath);
+
   // Catch errors in case the file cannot be created
   try
-    if Length(dbName)>20 then
+    if Length(dbName)>C_MAX_LENGTH then
     begin
         raise Exception.Create('Name cannot be greather than 20 characters!');
     end;
