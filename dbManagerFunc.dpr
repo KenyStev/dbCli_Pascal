@@ -24,6 +24,7 @@ end;
 
 procedure createSuperBlock(const dbName : string; dbSize : integer);
 begin
+    databaseNameSize := Length(dbName);
     databaseName := dbName;
     databaseSize := dbSize;
     cantBlocks := Floor(dbSize/sizeOfBlock);

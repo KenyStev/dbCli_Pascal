@@ -2,6 +2,7 @@ unit SharedGlobals;
     
 interface
 var //Metadata Database
+    databaseNameSize : integer;     // 4 bytes
     databaseName : string;          //20 bytes
     databaseSize : Longword;        // 4 bytes
     cantBlocks : integer;           // 4 bytes
@@ -15,6 +16,7 @@ var //Metadata Database
 
 var //Metadata ITables
     freeEntry : Byte;               // 1 bytes
+    tableNameSize : integer;        // 4 bytes
     tableName : string;             //20 bytes
     firstBlock : Longword;          // 4 bytes
     lastBlock : Longword;           // 4 bytes

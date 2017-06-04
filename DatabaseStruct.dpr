@@ -1,6 +1,6 @@
 const
-    C_TOTAL_SUPERBLOCK = 20+4*8;
-    C_TOTAL_ITABLES = 21+4*3;
+    C_TOTAL_SUPERBLOCK = 20+4*9;
+    C_TOTAL_ITABLES = 21+4*4;
         
 procedure printSuperBlock;
 begin
@@ -17,18 +17,20 @@ begin
 end;
 
 procedure saveSuperBlock;
-var
-    dbName : string;
-    osString : UTF8String;
+// var
+    // dbName : string;
+    // osString : UTF8String;
 begin
-    dbName := databaseName;
-    SetLength(dbName,C_MAX_LENGTH);
-    osString := UTF8String(dbName);
-    writeln('writeSB dbName: ',dbName);
-    writeln('writeSB: ',databaseName);
+    // dbName := databaseName;
+    // SetLength(dbName,C_MAX_LENGTH);
+    // osString := UTF8String(dbName);
+    // writeln('writeSB dbName: ',dbName);
+    // writeln('writeSB: ',databaseName);
     fsOut := openFile(databaseName);
-    writeln('writeSB dbName: ',dbName);
-    fsOut.WriteBuffer(osString[1], Length(dbName));
+    // writeln('writeSB dbName: ',dbName);
+    fsOut.Write(databaseNameSize,sizeof(integer));
+    fsOut.WriteBuffer(pointer(databaseName)^, databaseNameSize);
+    fsOut.Seek(20,soBeginning);
     fsOut.Write(databaseSize,sizeof(longword));
     fsOut.Write(cantBlocks,sizeof(integer));
     fsOut.Write(freeBlocks,sizeof(integer));
@@ -48,7 +50,9 @@ begin
     // writeln('readSB: ',databaseName);
     fsOut := openFile(databaseName);
     // writeln('readSB: ',databaseName);
-    // fsOut.ReadBuffer(isString[1], Length(isString));
+    fsOut.Read(databaseNameSize,sizeof(integer));
+    SetLength(databaseName,databaseNameSize);
+    fsOut.ReadBuffer(pointer(databaseName)^, databaseNameSize);
     // databaseName := string(isString);
     // writeln('readSB databaseName: ',databaseName);
     fsOut.Seek(20,soBeginning);
