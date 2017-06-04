@@ -11,7 +11,7 @@ var
 begin
     cluster := Floor(block/8);
     offset := Floor(block mod 8);
-    Result := (bitmap[cluster] and (1 shl offset)) <> 0
+    Result := (bitmap[cluster] and (1 shl offset)) <> 0ñ
 end;
  
 //set a particular bit as 1

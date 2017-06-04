@@ -19,7 +19,8 @@ end;
 procedure saveSuperBlock;
 begin
     fsOut := openFile(databaseName);
-    fsOut.Write(databaseName, 20);
+    fsOut.Write(databaseName, sizeof(databaseName));
+    fsOut.Seek(20,soBeginning);
     fsOut.Write(databaseSize,sizeof(longword));
     fsOut.Write(cantBlocks,sizeof(integer));
     fsOut.Write(freeBlocks,sizeof(integer));
@@ -32,15 +33,11 @@ begin
 end;
 
 procedure readSuperBlock;
-var
-    dbSize : longword;
 begin
     fsOut := openFile(databaseName);
-    fsOut.Seek(0,soBeginning);
-    fsOut.Read(databaseName, 20);
-    fsOut.Read(dbSize,sizeof(longword));
-    writeln('databaseSize:   -> ',dbSize);
-    databaseSize := dbSize;
+    fsOut.Read(databaseName, sizeof(databaseName));
+    fsOut.Seek(20,soBeginning);
+    fsOut.Read(databaseSize,sizeof(longword));
     fsOut.Read(cantBlocks,sizeof(integer));
     fsOut.Read(freeBlocks,sizeof(integer));
     fsOut.Read(cantITables,sizeof(integer));

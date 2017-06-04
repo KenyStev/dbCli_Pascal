@@ -11,12 +11,8 @@ var
   sizeOfBlock : Longword;
 
 function openFile(dbName:string) : TFileStream;
-var
-    fs : TFileStream;
 begin
-    fs := TFileStream.Create( C_ROOT + dbName + C_EXT, fmOpenWrite or fmOpenRead);
-    fs.Seek(0,soBeginning);
-    Result := fs;
+    Result := TFileStream.Create( C_ROOT + dbName + C_EXT, fmOpenReadWrite);
 end;
 
 {$I 'DatabaseStruct.dpr'}

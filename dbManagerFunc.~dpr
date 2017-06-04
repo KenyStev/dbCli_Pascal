@@ -4,7 +4,7 @@ const
 
   C_CREATE_DB_OPTION_MSG = '1. Create Database.';
   C_DROP_DB_OPTION_MSG = '2. Drop Database.';
-  C_CONNECT_DB_OPTION_MSG = '2. Connect Database.'ñ
+  C_CONNECT_DB_OPTION_MSG = '2. Connect Database.';
 
 var
   fsOut    : TFileStream;
@@ -12,8 +12,8 @@ var
 
 function openFile(dbName:string) : TFileStream;
 begin
-    Result := TFileStream.Create( C_ROOT + dbName + C_EXT, fmOpenWrite or fmOpenRead);
-end;
+    Result := TFileStream.Create( C_ROOT + dbName + C_EXT, fmOpenReadWrite);
+end
 
 {$I 'DatabaseStruct.dpr'}
 {$I 'BitmapManipulation.dpr'}

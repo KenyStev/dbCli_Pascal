@@ -34,11 +34,16 @@ end;
 procedure readSuperBlock;
 var
     dbSize : longword;
+    dbSizeBuff : array[0..3] of Byte;
 begin
-    fsOut := openFile(databaseName)
-    fsOut.Seek(0,soBeginning);
-    fsOut.Read(databaseName, 20);
-    fsOut.Read(dbSize,sizeof(longword));
+    dbSize := 0;
+    fsOut := TFileStream.Create( C_ROOT + databaseName + C_EXT, fmOpenWrite or fmOpenRead or fmShareDenyNone);//openFile(databaseName);
+    // fsOut.Seek(0,soBeginning);
+    // fsOut.Read(databaseName, 20);
+    fsOut.Seek(20,soBeginning);
+    writeln('position: ',fsOut.Position)
+    fsOut.Read(dbSize,sizeof(dbSize));
+    // dbSize := PLongWord(@dbSizeBuff[0])^;
     writeln('databaseSize:   -> ',dbSize);
     databaseSize := dbSize;
     fsOut.Read(cantBlocks,sizeof(integer));
