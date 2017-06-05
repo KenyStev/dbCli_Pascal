@@ -17,10 +17,13 @@ begin
 end;
 
 procedure saveSuperBlock;
+var
+    osString : UTF8String;
 begin
     fsOut := openFile(databaseName);
-    fsOut.Write(databaseName[1], Length(databaseName));
-    fsOut.Seek(20,soBeginning)
+    SetLength(databaseName,C_MAX_LENGTH);
+    osString := UTF8String(databaseName);
+    fsOut.WriteBuffer(osString[1], Length(databaseName));
     fsOut.Write(databaseSize,sizeof(longword));
     fsOut.Write(cantBlocks,sizeof(integer));
     fsOut.Write(freeBlocks,sizeof(integer));
@@ -33,10 +36,13 @@ begin
 end;
 
 procedure readSuperBlock;
+    isString : UTF8String;
 begin
+    SetLength(isString,C_MAX_LENGTH);
     fsOut := openFile(databaseName);
-    // fsOut.Read(databaseName, sizeof(databaseName));
-    fsOut.Seek(20,soBeginning);
+    fsOut.ReadBuffer(isString[1], Length(isString));
+    databaseName := string(isString);
+    // fsOut.Seek(20,soBeginning);
     fsOut.Read(databaseSize,sizeof(longword));
     fsOut.Read(cantBlocks,sizeof(integer));
     fsOut.Read(freeBlocks,sizeof(integer));

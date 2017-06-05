@@ -18,7 +18,7 @@ begin
     writeln(C_CREATE_DB_OPTION_MSG);
     writeln(C_DROP_DB_OPTION_MSG);
     writeln(C_CONNECT_DB_OPTION_MSG);
-    writeln('-1. Exit');
+    writeln('-1. Exit')
     write('select option: ');
     readln(option);
     try
@@ -26,7 +26,7 @@ begin
         1: CreateDatabase;
         2: DropDatabase;
         3: UseDatabase;
-        -1: writeln('bye bye!');
+        -1: writeln('bye bye! Pura Sarna este proyecto en Pascal >P');
       else writeln('Not valid option.');
       end;
     except
@@ -37,43 +37,8 @@ begin
 end;
 
 //Main
-var
-  tryfsOut : TFileStream;
-  valor : longword;
-  buff : array[0..3] of Byte absolute valor;
 begin
-  valor := 5242880;
-  tryfsOut := TFileStream.Create( C_FNAME, fmCreate);
-  writeln('pos: ',tryfsOut.Position);
-  writeln('sizeof(valor): ',sizeof(valor));
-  tryfsOut.WriteBuffer(buff, sizeof(buff));
-  writeln('pos: ',tryfsOut.Position);
-  writeln('sizeof(valor): ',sizeof(valor));
-  tryfsOut.Free;
-
-  // valor := 0;
-  // try
-  // tryfsOut := TFileStream.Create( C_FNAME, fmOpenWrite or fmOpenRead);
-  // writeln('pos: ',tryfsOut.Position);
-  // tryfsOut.Read(buff[0],SizeOf(longword));
-  // writeln('valor: ',valor);
-  // writeln('pos: ',tryfsOut.Position);//---
-  // tryfsOut.Read(valor,SizeOf(longword));
-  // writeln('valor: ',valor);
-  // writeln('pos: ',tryfsOut.Position);
-  // tryfsOut.Read(valor,SizeOf(longword));
-  // writeln('valor: ',valor);
-  // writeln('pos: ',tryfsOut.Position);
-  // tryfsOut.Read(valor,SizeOf(longword));
-  // writeln('valor: ',valor);
-  // writeln('pos: ',tryfsOut.Position);
-  // tryfsOut.Free;//---
-  // except
-  //   on E:Exception do
-  //     writeln('File ', C_FNAME, ' could not be created because: ', E.Message);
-  // end;
-
-  sizeOfBlock := 4*1024
+  sizeOfBlock := 4*1024;
   MainMenu;
   readln;
 end.
