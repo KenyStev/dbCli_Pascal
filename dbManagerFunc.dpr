@@ -14,7 +14,6 @@ var
 
 function openFile(const dbName:string) : TFileStream;
 begin
-    writeln('openFile: ',dbName);
     Result := TFileStream.Create( C_ROOT + dbName + C_EXT, fmOpenReadWrite);
 end;
 
@@ -48,8 +47,6 @@ begin
     cantTables := 0;
 
     saveSuperBlock;
-    printSuperBlock;
-    writeln('----------------------------');
     readSuperBlock;
     printSuperBlock;
     initBitmapBlocks;
@@ -71,9 +68,6 @@ begin
   dbSizeInBytes := dbSize*1024*1024;
   cantBlocks := Ceil(dbSizeInBytes/sizeOfBlock);
   dbSizeInBytes := cantBlocks*sizeOfBlock;
-
-  writeln('CreateDB: ',dbName);
-  writeln('CreateDBPath: ',dbPath);
 
   // Catch errors in case the file cannot be created
   try

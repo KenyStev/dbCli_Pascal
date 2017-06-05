@@ -18,9 +18,9 @@ begin
     writeln(C_CREATE_DB_OPTION_MSG);
     writeln(C_DROP_DB_OPTION_MSG);
     writeln(C_CONNECT_DB_OPTION_MSG);
-    writeln('-1. Exit');
+    writeln('-1. Exit')
     write('select option: ');
-    readln(option)
+    readln(option);
     try
       case option of
         1: CreateDatabase;

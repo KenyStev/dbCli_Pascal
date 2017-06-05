@@ -40,7 +40,6 @@ begin
     while nextFreeITable < cantITables do
     begin
         fsOut.Read(isFree,sizeof(Byte));
-        writeln('isFree; ',isFree);
         if isFree = 0 then
         begin
             Result := nextFreeITable;
@@ -56,42 +55,37 @@ end;
 
 function existTable(const nameTable : string) : Boolean;
 var
-    nextTable : longword;
+    nextTable, countTable : longword;
     nextRecord : longword;
     currentTableName : string;
     isFree : Byte;
 begin
     nextTable := 0;
+    countTable := 0;
     Result := false;
     fsOut := openFile(databaseName);
     fsOut.Seek(bitmapITable,soBeginning);
-    writeln('nextTable: ',nextTable);
-    writeln('cantTables: ',cantTables);
-    while nextTable < cantTables do
+    while countTable < cantTables do
     begin
         fsOut.Read(isFree,sizeof(Byte));
-        writeln('isFree: ',isFree);
         if not isFree = 0 then
         begin
             fsOut.Read(tableNameSize,sizeof(integer));
             SetLength(currentTableName,tableNameSize);
             fsOut.ReadBuffer(pointer(currentTableName)^,tableNameSize);
-            writeln('currentTableName: ',currentTableName);
             if ansicomparestr(nameTable,currentTableName) = 0 then
             begin
                 currentTable := nextTable;
                 Result := true;
                 fsOut.free;
                 exit;
-            end;
+            end
+            else countTable := countTable + 1;
         end;
 
         nextTable := nextTable + 1;
         nextRecord := bitmapITable + nextTable*C_TOTAL_ITABLES;
         fsOut.Seek(nextRecord,soBeginning);
-
-        writeln('nextTable: ',nextTable);
-        writeln('cantTables: ',cantTables);
     end;
     
     fsOut.free;
@@ -153,7 +147,6 @@ begin
     offset := firstBlock*sizeOfBlock;
     fsOut := openFile(databaseName);
     fsOut.Seek(offset+sizeof(integer),soBeginning);
-    writeln('offset+int: ',offset+sizeof(integer));
     repeat
         write('Desea agregar un campo (si/no): ');
         readln(option);
@@ -187,7 +180,7 @@ begin
                 case typeField of
                 1,2,3: begin
                     newField.Tipo := typeField;
-                    writeln('Writing field: ',newField.nombre,' ',newField.Tipo,'(',newField.Size,')');
+                    writeln('Writing field: ',newField.nombre,' ',GetTypeName(newField.Tipo),'(',newField.Size,')');
                     fsOut.WriteBuffer(newField,sizeof(TField));
                     cantFields := cantFields + 1;
                     freeSpaceOfLastBlock := freeSpaceOfLastBlock - sizeof(TField);
@@ -200,16 +193,8 @@ begin
             option := 'no';
         end;
     until (ansicomparestr(option,'no') = 0);
-    writeln('offset: ',offset);
     fsOut.Seek(offset,soBeginning);
-    writeln('writing cantFields: ',cantFields);
-    writeln('fsOut.Position',fsOut.Position);
     fsOut.Write(cantFields,sizeof(integer));
-    writeln('fsOut.Position',fsOut.Position);
-    fsOut.Seek(offset,soBeginning);
-    cantFields := 0;
-    fsOut.Read(cantFields,sizeof(integer));
-    writeln('writing cantFields: ',cantFields);
     fsOut.free;
     saveTableEntry;
 end;
@@ -223,8 +208,6 @@ begin
     readBitmapBlocks;
     indexTable := GetNextFreeITable;
     startBlock := GetNextFreeBlock;
-    writeln('indexTable: ',indexTable);
-    writeln('startBlock: ',startBlock);
     if (indexTable >= 0) And (startBlock > 0) then
     begin
         clearMemoryOfBlock(startBlock);
@@ -249,7 +232,7 @@ begin
             setFieldsToTable;
             writeln('Table: ',newTableName,' has been created!');
         end
-        else writeln('Table already exist!');
+        else writeln('Table: ',newTableName,' already exist!');
     end
     else
     begin
@@ -257,9 +240,43 @@ begin
     end;
 end;
 
-procedure DropTable; //TODO
+procedure freeUsedBlocks(block : longword);
+var
+    offset : longword;
+    nextBlock : longword;
 begin
-    
+    offset := block*sizeOfBlock + sizeOfBlock - sizeof(longword);
+    fsOut := openFile(databaseName);
+    fsOut.Seek(offset,soBeginning);
+    fsOut.Read(nextBlock,sizeof(longword));
+    if nextBlock <> 0 
+    then freeUsedBlocks(nextBlock)
+    else ClearUsedBlock(block);
+    fsOut.free;
+end;
+
+procedure DropTable;
+var
+    tableNameToDrop : string;
+begin
+    write('Table to Drop: ');
+    readln(tableNameToDrop);
+    if existTable(tableNameToDrop) then
+    begin
+        readBitmapBlocks;
+        readCurrentTableEntry;
+        freeUsedBlocks(firstBlock);
+        saveBitmapBlocks;
+        freeEntry := 0;
+        tableName := '';
+        tableNameSize := Length(tableName);
+        saveTableEntry;
+        freeItables := freeItables + 1;
+        cantTables := cantTables - 1;
+        saveSuperBlock;
+        writeln('Table: ',tableNameToDrop,' has been dropped!');
+    end
+    else writeln('Table: ',tableNameToDrop,' Not Exist!');
 end;
 
 procedure readFieldsForCurrentTable;
@@ -270,15 +287,12 @@ var
 begin
     cantFields :=0;
     fsOut := openFile(databaseName);
-    writeln('reading fields firstBlock: ',firstBlock);
     fsOut.Seek(firstBlock*sizeOfBlock,soBeginning);
     fsOut.Read(cantFields,sizeof(integer));
-    writeln('reading cantFields: ',cantFields);
     SetLength(fieldsCurrentTable,cantFields);
     for i := 0 to (cantFields-1) do
     begin
         fsOut.ReadBuffer(readingField,sizeof(TField));
-        writeln('readingField: ',readingField.Nombre);
         fieldsCurrentTable[i] := readingField;
     end;
     fsOut.free;
@@ -298,5 +312,5 @@ begin
         for i := 0 to (Length(fieldsCurrentTable)-1) do
             writeln(fieldsCurrentTable[i].Nombre,' ',GetTypeName(fieldsCurrentTable[i].Tipo),'(',fieldsCurrentTable[i].Size,')');
     end
-    else writeln('Table Not Exist!');
+    else writeln('Table: ',tableNameToShowFields,' Not Exist!');
 end;

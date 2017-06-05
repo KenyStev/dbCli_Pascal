@@ -49,5 +49,4 @@ begin
     fsOut.Read(bitmapITable,sizeof(longword));
     fsOut.Read(cantTables,sizeof(longword));
     fsOut.free;
-    printSuperBlock;
 end;

@@ -55,8 +55,6 @@ end;
 
 procedure readBitmapBlocks;
 begin
-    writeln('readBitmapBlocks: ',databaseName);
-    writeln('readBitmapBlocks Length: ',Length(databaseName));
     fsOut := openFile(databaseName);
     bitmapLength := Ceil(cantBlocks/8);
     SetLength(bitmap,bitmapLength);
@@ -67,8 +65,6 @@ end;
 
 procedure saveBitmapBlocks;
 begin
-    writeln('saveBitmapBlocks: ',databaseName);
-    writeln('saveBitmapBlocks Length: ',Length(databaseName));
     fsOut := openFile(databaseName);
     fsOut.Seek(bitmapBlock,soBeginning);
     fsOut.Write(bitmap[0],bitmapLength);
