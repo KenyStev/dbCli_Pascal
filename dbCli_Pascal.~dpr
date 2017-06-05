@@ -2,7 +2,7 @@ program dbCli_Pascal;
 
 {$APPTYPE CONSOLE}
 uses
-  Classes, Sysutils, MATH, SharedGlobals
+  Classes, Sysutils, MATH, SharedGlobals;
 
 const
   C_FNAME = 'binarydata.bin';
@@ -20,13 +20,13 @@ begin
     writeln(C_CONNECT_DB_OPTION_MSG);
     writeln('-1. Exit');
     write('select option: ');
-    readln(option);
+    readln(option)
     try
       case option of
         1: CreateDatabase;
         2: DropDatabase;
         3: UseDatabase;
-        -1: writeln('bye bye!');
+        -1: writeln('bye bye! Pura Sarna este proyecto en Pascal >P');
       else writeln('Not valid option.');
       end;
     except

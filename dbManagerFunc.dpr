@@ -18,6 +18,17 @@ begin
     Result := TFileStream.Create( C_ROOT + dbName + C_EXT, fmOpenReadWrite);
 end;
 
+procedure clearMemoryOfBlock(block : Longword);
+var
+    mem : array of Byte;
+begin
+    SetLength(mem,sizeOfBlock);
+    fsOut := openFile(databaseName);
+    fsOut.Seek(block*sizeOfBlock,soBeginning);
+    fsOut.WriteBuffer(mem,sizeof(mem));
+    fsOut.free;
+end;
+
 {$I 'DatabaseStruct.dpr'}
 {$I 'BitmapManipulation.dpr'}
 {$I 'TablesManipulation.dpr'}
@@ -29,11 +40,11 @@ begin
     databaseSize := dbSize;
     cantBlocks := Floor(dbSize/sizeOfBlock);
     reserverForITables := Floor(dbSize*0.15);
-    freeBlocks := cantBlocks - Ceil((C_TOTAL_SUPERBLOCK + reserverForITables + cantBlocks/8)/sizeOfBlock);
+    freeBlocks := cantBlocks - longword(Ceil((C_TOTAL_SUPERBLOCK + reserverForITables + cantBlocks/8)/sizeOfBlock));
     cantITables := Floor(reserverForITables/C_TOTAL_ITABLES);
     freeITables := cantITables;
     bitmapBlock := C_TOTAL_SUPERBLOCK;
-    bitmapITable := bitmapBlock + Ceil(cantBlocks/8);
+    bitmapITable := bitmapBlock + longword(Ceil(cantBlocks/8));
     cantTables := 0;
 
     saveSuperBlock;
@@ -48,9 +59,8 @@ procedure CreateDatabase;
 var
   dbName : string;
   dbPath : string;
-  dbSize : integer;
-  dbSizeInBytes : integer;
-  cantBlocks : integer;
+  dbSize : longword;
+  dbSizeInBytes : longword;
 begin
   dbSize := 10;
   write('Insert database name: ');
@@ -110,6 +120,7 @@ begin
         writeln(C_CREATE_TABLE_MSG);
         writeln(C_DROP_TABLE_MSG);
         writeln(C_PRINT_SUPERBLOCK_MSG);
+        writeln(C_PRINT_FIELDS_MSG);
         writeln('-1. Disconnect.');
         write('select option: ');
         readln(option);
@@ -118,6 +129,7 @@ begin
         1: CreateTable;
         2: DropTable;
         7: printSuperBlock;
+        8: printFieldsForTable;
         -1: writeln('disconnecting: ',dbName,'!');
         else writeln('Not valid option.');
         end;

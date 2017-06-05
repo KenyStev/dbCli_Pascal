@@ -2,6 +2,21 @@ const
   C_CREATE_TABLE_MSG = '1. Create Table.';
   C_DROP_TABLE_MSG = '2. Drop Table.';
   C_PRINT_SUPERBLOCK_MSG = '7. Show Super Block.';
+  C_PRINT_FIELDS_MSG = '8. Show Fields.';
+
+  C_INT_TYPE = 1;
+  C_DOUBLE_TYPE = 2;
+  C_CHAR_TYPE = 3;
+
+type
+  TField = record
+    Nombre : string[50];
+    Tipo  : integer;
+    Size : integer;
+  end;
+
+var
+    fieldsCurrentTable : array of TField;
 
 function GetNextFreeITable : integer;
 var
@@ -37,7 +52,6 @@ var
     nextRecord : longword;
     currentTableName : string;
     isFree : Byte;
-    // isStringEntry : UTF8String;
 begin
     nextTable := 0;
     Result := false;
@@ -51,15 +65,13 @@ begin
         writeln('isFree: ',isFree);
         if not isFree = 0 then
         begin
-            // isStringEntry := '';
-            // currentTableName := ''
             fsOut.Read(tableNameSize,sizeof(integer));
             SetLength(currentTableName,tableNameSize);
             fsOut.ReadBuffer(pointer(currentTableName)^,tableNameSize);
-            // currentTableName := string(isStringEntry);
             writeln('currentTableName: ',currentTableName);
             if ansicomparestr(nameTable,currentTableName) = 0 then
             begin
+                currentTable := nextTable;
                 Result := true;
                 fsOut.free;
                 exit;
@@ -80,29 +92,120 @@ end;
 procedure saveTableEntry;
 var
     offset : longword;
-    // osStringEntry : UTF8String;
+    offsetName : longword;
 begin
-    writeln('saveEntry tableName: ',tableName);
     offset := bitmapITable + currentTable*C_TOTAL_ITABLES;
+    offsetName := offset + sizeof(Byte) + sizeof(integer) + C_MAX_LENGTH;
     fsOut := openFile(databaseName);
     fsOut.Seek(offset,soBeginning);
-    writeln('pos: ',fsOut.Position);
     fsOut.Write(freeEntry,sizeof(Byte));
     fsOut.Write(tableNameSize,sizeof(integer));
-    writeln('pos: ',fsOut.Position);
-    // SetLength(tableName,C_MAX_LENGTH);
-    writeln('saveEntry tableName: ',tableName);
-    // osStringEntry := UTF8String(tableName);
-    writeln('saveEntry tableName: ',tableName);
     fsOut.WriteBuffer(pointer(tableName)^,tableNameSize);
-    writeln('pos: ',fsOut.Position);
-    fsOut.Write(firstBlock,sizeof(integer));
-    writeln('pos: ',fsOut.Position);
-    fsOut.Write(lastBlock,sizeof(integer));
-    writeln('pos: ',fsOut.Position);
-    fsOut.Write(cantRegisters,sizeof(integer));
-    writeln('pos: ',fsOut.Position);
+    fsOut.Seek(offsetName,soBeginning);
+    fsOut.Write(firstBlock,sizeof(longword));
+    fsOut.Write(lastBlock,sizeof(longword));
+    fsOut.Write(cantRegisters,sizeof(longword));
+    fsOut.Write(freeSpaceOfLastBlock,sizeof(longword));
     fsOut.free;
+end;
+
+procedure readCurrentTableEntry;
+var
+    offset : longword;
+    offsetName : longword;
+begin
+    offset := bitmapITable + currentTable*C_TOTAL_ITABLES;
+    offsetName := offset + sizeof(Byte) + sizeof(integer) + C_MAX_LENGTH;
+    fsOut := openFile(databaseName);
+    fsOut.Seek(offset,soBeginning);
+    fsOut.Read(freeEntry,sizeof(Byte));
+    fsOut.Read(tableNameSize,sizeof(integer));
+    fsOut.ReadBuffer(pointer(tableName)^,tableNameSize);
+    fsOut.Seek(offsetName,soBeginning);
+    fsOut.Read(firstBlock,sizeof(longword));
+    fsOut.Read(lastBlock,sizeof(longword));
+    fsOut.Read(cantRegisters,sizeof(longword));
+    fsOut.Read(freeSpaceOfLastBlock,sizeof(longword));
+    fsOut.free;
+end;
+
+procedure setFieldsToTable;
+var
+    option : string;
+    fieldName : string;
+    typeField, lengthChar : integer;
+    offset : longword;
+    cantFields : integer;
+    newField : TField;
+begin
+    readCurrentTableEntry;
+    option := 'si';
+    cantFields := 0;
+    offset := firstBlock*sizeOfBlock;
+    fsOut := openFile(databaseName);
+    fsOut.Seek(offset+sizeof(integer),soBeginning);
+    writeln('offset+int: ',offset+sizeof(integer));
+    repeat
+        write('Desea agregar un campo (si/no): ');
+        readln(option);
+        if ansicomparestr(option,'si') = 0 then
+        begin
+            write('Nombre del Campo: ');
+            readln(fieldName);
+            if (Length(fieldName) > 0) and (Length(fieldName) <= 50) Then
+            begin
+                newField.Nombre := fieldName;
+                writeln('1. Int.');
+                writeln('2. Double.');
+                writeln('3. Char.');
+                write('Seleccione Tipo de Campo: ');
+                readln(typeField);
+
+                case typeField of
+                    1: begin
+                        newField.Tipo := typeField;
+                        newField.Size := 4;
+                    end;
+                    2: begin
+                        newField.Tipo := typeField;
+                        newField.Size := 8;
+                    end;
+                    3: begin
+                        write('Cantidad de chars(0-255): ');
+                        readln(lengthChar);
+                        if (lengthChar >= 0) and (lengthChar < 256) then
+                        begin
+                            newField.Tipo := typeField;
+                            newField.Size := lengthChar;
+                            // fsOut.Write(typeField,sizeof(typeField));
+                            // fsOut.Write(lengthChar,sizeof(lengthChar));
+                            // cantFields := cantFields + 1;
+                        end
+                        else writeln('Char out of length');
+                    end;
+                    else writeln('Not Valid Type');
+                end;
+                case typeField of
+                1,2,3: begin
+                    writeln('Writing field: ',newField.nombre,' ',newField.Tipo,'(',newField.Size,')');
+                    fsOut.WriteBuffer(newField,sizeof(TField));
+                    cantFields := cantFields + 1;
+                    freeSpaceOfLastBlock := freeSpaceOfLastBlock - sizeof(TField);
+                    end;
+                end;
+            end;
+        end
+        else
+        begin
+            option := 'no';
+        end;
+    until (ansicomparestr(option,'no') = 0);
+    writeln('offset: ',offset);
+    fsOut.Seek(offset,soBeginning);
+    writeln('writing cantFields: ',cantFields);
+    fsOut.Write(cantFields,sizeof(integer));
+    fsOut.free;
+    saveTableEntry;
 end;
 
 procedure CreateTable;
@@ -118,6 +221,7 @@ begin
     writeln('startBlock: ',startBlock);
     if (indexTable >= 0) And (startBlock > 0) then
     begin
+        clearMemoryOfBlock(startBlock);
         write('Insert Table Name: ');
         readln(newTableName);
         if not existTable(newTableName) then 
@@ -129,12 +233,14 @@ begin
             lastBlock := startBlock;
             cantRegisters := 0;
             currentTable := indexTable;
+            freeSpaceOfLastBlock := sizeOfBlock - 8;
             saveTableEntry;
             SetUsedBlock(startBlock);
             saveBitmapBlocks;
             cantTables := cantTables + 1;
             freeItables := freeItables - 1;
             saveSuperBlock;
+            setFieldsToTable;
             writeln('Table: ',newTableName,' has been created!');
         end
         else writeln('Table already exist!');
@@ -145,7 +251,46 @@ begin
     end;
 end;
 
-procedure DropTable;
+procedure DropTable; //TODO
 begin
     
+end;
+
+procedure readFieldsForCurrentTable;
+var
+    i : integer;
+    cantFields : integer;
+    readingField : TField;
+begin
+    fsOut := openFile(databaseName);
+    writeln('reading fields firstBlock: ',firstBlock);
+    fsOut.Seek(firstBlock,soBeginning);
+    fsOut.Read(cantFields,sizeof(integer));
+    writeln('reading cantFields: ',cantFields);
+    cantFields := 2;
+    SetLength(fieldsCurrentTable,cantFields);
+    for i := 0 to (cantFields-1) do
+    begin
+        fsOut.ReadBuffer(readingField,sizeof(TField));
+        writeln('readingField: ',readingField.Nombre);
+        fieldsCurrentTable[i] := readingField;
+    end;
+    fsOut.free;
+end;
+
+procedure printFieldsForTable;
+var
+    i : integer;
+    tableNameToShowFields : string;
+begin
+    write('Ingrese nombre de tabla: ');
+    readln(tableNameToShowFields);
+    if existTable(tableNameToShowFields) then
+    begin
+        readCurrentTableEntry;
+        readFieldsForCurrentTable;
+        for i := 0 to (Length(fieldsCurrentTable)-1) do
+            writeln(fieldsCurrentTable[i].Nombre,' ',fieldsCurrentTable[i].Tipo,'(',fieldsCurrentTable[i].Size,')');
+    end
+    else writeln('Table Not Exist!');
 end;
