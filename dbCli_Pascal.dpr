@@ -26,7 +26,7 @@ begin
         1: CreateDatabase;
         2: DropDatabase;
         3: UseDatabase;
-        -1: writeln('bye bye! Pura Sarna este proyecto en Pascal >P');
+        -1: writeln('bye bye! Puro estres tabajar en Pascal >P');
       else writeln('Not valid option.');
       end;
     except

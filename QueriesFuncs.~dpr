@@ -22,7 +22,7 @@ begin
         for i := 0 to (Length(fieldsCurrentTable)-1) do
             registerSize := registerSize + fieldsCurrentTable[i].Size;
 
-        offset := lastBlock*sizeOfBlock + usedSpaceOfLastBlock;// + cantRegisters*registerSize;
+        offset := lastBlock*sizeOfBlock + usedSpaceOfLastBlock;
         fsOut := openFile(databaseName);
         fsOut.Seek(offset,soBeginning);
         
@@ -57,12 +57,14 @@ end;
 procedure SelectFromTable;
 var
     i : Integer;
+    option : Integer;
     offset : longword;
     currentRow : longword;
     readingString : string;
     readingDouble : Double;
     readingInteger : Integer;
     fromTableName : string;
+    fieldsToShow : array of Boolean;
 begin
     write('Ingreste Nombre de Tabla: ');
     readln(fromTableName);
@@ -71,13 +73,31 @@ begin
         currentRow := 0;
         readCurrentTableEntry;
         readFieldsForCurrentTable;
+
+        SetLength(fieldsToShow,Length(fieldsCurrentTable))
+        for i := 0 to (Length(fieldsCurrentTable)-1) do
+        begin
+            write('Show Field: ',fieldsCurrentTable[i].Nombre,'? (1:si/2:no): ');
+            readln(option);
+            while ((option <> 1) and (option <> 2)) do
+            begin
+                write('Option not valid! Insert option again: ');
+                readln(option);
+            end;
+            
+            if option = 1 
+            then fieldsToShow[i] := true
+            else fieldsToShow[i] := false;
+        end;
+
         offset := lastBlock*sizeOfBlock + usedSpaceForFields;
         fsOut := openFile(databaseName);
         fsOut.Seek(offset,soBeginning);
         
         for i := 0 to (Length(fieldsCurrentTable)-1) do
         begin
-            write(Format('%10s',[fieldsCurrentTable[i].Nombre]));
+            if fieldsToShow[i] 
+            then write(Format('%10s',[fieldsCurrentTable[i].Nombre]));
         end;
         writeln('');
 
@@ -85,20 +105,27 @@ begin
         begin
             for i := 0 to (Length(fieldsCurrentTable)-1) do
             begin
-                case fieldsCurrentTable[i].Tipo of
-                    1: begin
-                        fsOut.Read(readingInteger,sizeof(readingInteger));
-                        write(Format('%10d',[readingInteger]));
+                if fieldsToShow[i] then
+                begin
+                    case fieldsCurrentTable[i].Tipo of
+                        1: begin
+                            fsOut.Read(readingInteger,sizeof(readingInteger));
+                            write(Format('%10d',[readingInteger]));
+                        end;
+                        2: begin
+                            fsOut.Read(readingDouble,sizeof(readingDouble));
+                            write(Format('%10f',[readingDouble]));
+                        end;
+                        3: begin
+                            SetLength(readingString,fieldsCurrentTable[i].Size);
+                            fsOut.Read(pointer(readingString)^,Length(readingString));
+                            write(Format('%10s',[readingString]));
+                        end;
                     end;
-                    2: begin
-                        fsOut.Read(readingDouble,sizeof(readingDouble));
-                        write(Format('%10f',[readingDouble]));
-                    end;
-                    3: begin
-                        SetLength(readingString,fieldsCurrentTable[i].Size);
-                        fsOut.Read(pointer(readingString)^,Length(readingString));
-                        write(Format('%10s',[readingString]))
-                    end;
+                end
+                else
+                begin
+                    fsOut.Seek(fieldsCurrentTable[i].Size,soCurrent);
                 end;
             end;
             writeln('');
