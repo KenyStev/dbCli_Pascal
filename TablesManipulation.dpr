@@ -16,6 +16,7 @@ type
   end;
 
 var
+    usedSpaceForFields : longword;
     fieldsCurrentTable : array of TField;
 
 function GetTypeName(typeNumber:integer) : string;
@@ -107,7 +108,7 @@ begin
     fsOut.Write(firstBlock,sizeof(longword));
     fsOut.Write(lastBlock,sizeof(longword));
     fsOut.Write(cantRegisters,sizeof(longword));
-    fsOut.Write(freeSpaceOfLastBlock,sizeof(longword));
+    fsOut.Write(usedSpaceOfLastBlock,sizeof(longword));
     fsOut.free;
 end;
 
@@ -128,7 +129,7 @@ begin
     fsOut.Read(firstBlock,sizeof(longword));
     fsOut.Read(lastBlock,sizeof(longword));
     fsOut.Read(cantRegisters,sizeof(longword));
-    fsOut.Read(freeSpaceOfLastBlock,sizeof(longword));
+    fsOut.Read(usedSpaceOfLastBlock,sizeof(longword));
     fsOut.free;
 end;
 
@@ -183,7 +184,7 @@ begin
                     writeln('Writing field: ',newField.nombre,' ',GetTypeName(newField.Tipo),'(',newField.Size,')');
                     fsOut.WriteBuffer(newField,sizeof(TField));
                     cantFields := cantFields + 1;
-                    freeSpaceOfLastBlock := freeSpaceOfLastBlock - sizeof(TField);
+                    usedSpaceOfLastBlock := usedSpaceOfLastBlock + sizeof(TField);
                     end;
                 end;
             end;
@@ -196,6 +197,7 @@ begin
     fsOut.Seek(offset,soBeginning);
     fsOut.Write(cantFields,sizeof(integer));
     fsOut.free;
+    usedSpaceOfLastBlock := usedSpaceOfLastBlock + sizeof(integer);
     saveTableEntry;
 end;
 
@@ -222,7 +224,7 @@ begin
             lastBlock := startBlock;
             cantRegisters := 0;
             currentTable := indexTable;
-            freeSpaceOfLastBlock := sizeOfBlock - 8;
+            usedSpaceOfLastBlock := 0;
             saveTableEntry;
             SetUsedBlock(startBlock);
             saveBitmapBlocks;
@@ -290,6 +292,7 @@ begin
     fsOut.Seek(firstBlock*sizeOfBlock,soBeginning);
     fsOut.Read(cantFields,sizeof(integer));
     SetLength(fieldsCurrentTable,cantFields);
+    usedSpaceForFields := sizeof(integer) + cantFields*sizeof(TField);
     for i := 0 to (cantFields-1) do
     begin
         fsOut.ReadBuffer(readingField,sizeof(TField));

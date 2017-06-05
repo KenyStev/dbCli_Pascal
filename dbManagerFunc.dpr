@@ -31,6 +31,7 @@ end;
 {$I 'DatabaseStruct.dpr'}
 {$I 'BitmapManipulation.dpr'}
 {$I 'TablesManipulation.dpr'}
+{$I 'QueriesFuncs.dpr'}
 
 procedure createSuperBlock(const dbName : string; dbSize : integer);
 begin
@@ -113,6 +114,8 @@ begin
     repeat
         writeln(C_CREATE_TABLE_MSG);
         writeln(C_DROP_TABLE_MSG);
+        writeln(C_INSERT_INTO_TABLE_MSG);
+        writeln(C_SELECT_TABLE_MSG);
         writeln(C_PRINT_SUPERBLOCK_MSG);
         writeln(C_PRINT_FIELDS_MSG);
         writeln('-1. Disconnect.');
@@ -122,6 +125,8 @@ begin
         case option of
         1: CreateTable;
         2: DropTable;
+        3: InserIntoTable;
+        4: SelectFromTable;
         7: printSuperBlock;
         8: printFieldsForTable;
         -1: writeln('disconnecting: ',dbName,'!');

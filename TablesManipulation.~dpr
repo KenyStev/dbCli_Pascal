@@ -107,7 +107,7 @@ begin
     fsOut.Write(firstBlock,sizeof(longword));
     fsOut.Write(lastBlock,sizeof(longword));
     fsOut.Write(cantRegisters,sizeof(longword));
-    fsOut.Write(freeSpaceOfLastBlock,sizeof(longword));
+    fsOut.Write(usedSpaceOfLastBlock,sizeof(longword));
     fsOut.free;
 end;
 
@@ -128,7 +128,7 @@ begin
     fsOut.Read(firstBlock,sizeof(longword));
     fsOut.Read(lastBlock,sizeof(longword));
     fsOut.Read(cantRegisters,sizeof(longword));
-    fsOut.Read(freeSpaceOfLastBlock,sizeof(longword));
+    fsOut.Read(usedSpaceOfLastBlock,sizeof(longword));
     fsOut.free;
 end;
 
@@ -183,7 +183,7 @@ begin
                     writeln('Writing field: ',newField.nombre,' ',GetTypeName(newField.Tipo),'(',newField.Size,')');
                     fsOut.WriteBuffer(newField,sizeof(TField));
                     cantFields := cantFields + 1;
-                    freeSpaceOfLastBlock := freeSpaceOfLastBlock - sizeof(TField);
+                    usedSpaceOfLastBlock := usedSpaceOfLastBlock + sizeof(TField);
                     end;
                 end;
             end;
@@ -196,6 +196,7 @@ begin
     fsOut.Seek(offset,soBeginning);
     fsOut.Write(cantFields,sizeof(integer));
     fsOut.free;
+    usedSpaceOfLastBlock := usedSpaceOfLastBlock + sizeof(integer);
     saveTableEntry;
 end;
 
@@ -222,7 +223,7 @@ begin
             lastBlock := startBlock;
             cantRegisters := 0;
             currentTable := indexTable;
-            freeSpaceOfLastBlock := sizeOfBlock - 8;
+            usedSpaceOfLastBlock := 0;
             saveTableEntry;
             SetUsedBlock(startBlock);
             saveBitmapBlocks;
@@ -245,12 +246,10 @@ var
     offset : longword;
     nextBlock : longword;
 begin
-    writeln('block: ',block);
     offset := block*sizeOfBlock + sizeOfBlock - sizeof(longword);
     fsOut := openFile(databaseName);
     fsOut.Seek(offset,soBeginning);
     fsOut.Read(nextBlock,sizeof(longword));
-    writeln('nextBlock: ',nextBlock);
     if nextBlock <> 0 
     then freeUsedBlocks(nextBlock)
     else ClearUsedBlock(block);
@@ -269,9 +268,9 @@ begin
         readCurrentTableEntry;
         freeUsedBlocks(firstBlock);
         saveBitmapBlocks;
-        freeEntry := 0
+        freeEntry := 0;
         tableName := '';
-        tableNameSize := Length(tableName);
+        tableNameSize := Length(tableName)
         saveTableEntry;
         freeItables := freeItables + 1;
         cantTables := cantTables - 1;
@@ -314,5 +313,5 @@ begin
         for i := 0 to (Length(fieldsCurrentTable)-1) do
             writeln(fieldsCurrentTable[i].Nombre,' ',GetTypeName(fieldsCurrentTable[i].Tipo),'(',fieldsCurrentTable[i].Size,')');
     end
-    else writeln('Table Not Exist!');
+    else writeln('Table: ',tableNameToShowFields,' Not Exist!');
 end;

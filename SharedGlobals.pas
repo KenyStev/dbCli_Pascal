@@ -21,7 +21,7 @@ var //Metadata ITables
     firstBlock : Longword;          // 4 bytes
     lastBlock : Longword;           // 4 bytes
     cantRegisters : Longword;       // 4 bytes
-    freeSpaceOfLastBlock : Longword;// 4 bytes
+    usedSpaceOfLastBlock : Longword;// 4 bytes
     currentTable : Longword;
     
 implementation
